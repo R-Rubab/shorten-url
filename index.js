@@ -1,6 +1,8 @@
 const express = require("express");
+const path = require("path");
 const urlRoute = require("./routes/url");
 const URL = require("./models/url.js");
+const staticRoute = require("./routes/static_router.js");
 const { connectedMongooseDB } = require("./connection");
 
 const app = express();
@@ -10,15 +12,29 @@ connectedMongooseDB("mongodb://localhost:27017/short-url").then(() =>
   console.log("Mongoose Connected!")
 );
 
-app.use(express.json());
-app.use("/url", urlRoute);
+app.set("view engine", "ejs");
 
-app.get("/:shortId", async (req, res) => {
-  const shortId = req.params.shortId;
+app.set("views", path.resolve("./views"));
+
+// app.get("/test", async (req, res) => {
+//   const allUrl = await URL.find({});
+//   return res.render("home", {
+//     urls: allUrl,
+//   });
+// });
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+app.use("/url", urlRoute);
+app.use("/", staticRoute);
+
+app.get("/url/:shortId", async (req, res) => {
+  const shortID = req.params.shortId;
 
   const entry = await URL.findOneAndUpdate(
     {
-      shortId,
+      shortID,
     },
     {
       $push: {
